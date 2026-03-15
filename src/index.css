@@ -1,0 +1,846 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* ========================================
+   STYLES IMPRESSION - PAGE /print UNIQUEMENT
+   ======================================== */
+
+/* Bannière nom de fichier (écran uniquement) */
+.filename-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.filename-banner-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filename-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.filename-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.filename-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.copy-button,
+.print-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid white;
+}
+
+.copy-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.copy-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.print-button {
+  background: white;
+  color: #667eea;
+}
+
+.print-button:hover {
+  background: #f7fafc;
+  transform: translateY(-1px);
+}
+
+/* Container principal page print */
+.print-page {
+  background: white;
+  min-height: 100vh;
+  padding-top: 70px;
+}
+
+.print-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 1.125rem;
+  color: #4a5568;
+}
+
+/* Contenu individuel et commun */
+.print-individual-content,
+.print-common-content {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  padding: 1rem;
+  background: white;
+}
+
+/* Header compact */
+.print-header-compact {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.print-header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 0.25rem 0;
+}
+
+.print-header-stats {
+  font-size: 0.875rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* Wrapper tableau */
+.print-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  max-height: 70vh;
+  overflow-y: auto;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Mode prévisualisation complète (désactive le scroll vertical) */
+.preview-full .print-table-wrapper {
+  max-height: none !important;
+  height: auto !important;
+  overflow-y: visible !important;
+}
+
+.print-table {
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  table-layout: fixed;
+  min-width: 900px;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.print-table tbody {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.print-table tr {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.print-table td,
+.print-table th {
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 1 !important;
+}
+
+.print-table-time-header,
+.print-table-day-header {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #2d3748;
+  text-align: center;
+  padding: 0.5rem;
+  background: #edf2f7;
+  border: 1px solid #cbd5e0;
+}
+
+.print-table-time-header {
+  width: 100px;
+}
+
+.print-table-row {
+  height: 60px;
+}
+
+.print-table-time-cell {
+  width: 100px;
+  padding: 0.5rem;
+  background: #f7fafc;
+  border: 1px solid #cbd5e0;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.print-table-empty-cell {
+  border: 1px solid #e2e8f0;
+  background: #fafafa;
+  min-width: 140px;
+}
+
+.print-table-event-cell {
+  border: 2px solid;
+  padding: 0.5rem;
+  vertical-align: top;
+  position: relative;
+  min-width: 140px;
+}
+
+/* ========================================
+   OVERLAY STACKING FIX
+   Force cells with PRISE_EN_CHARGE to stack above subsequent rows
+   ======================================== */
+
+.print-table td.has-overlay,
+.print-table th.has-overlay {
+  z-index: 50 !important;
+}
+
+/* ========================================
+   OVERLAYS (PRISE_EN_CHARGE)
+   Separate layer above table
+   ======================================== */
+
+.overlays-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100 !important;
+}
+
+.overlay-event {
+  position: absolute !important;
+  pointer-events: auto;
+  background-color: white !important;
+  border: 2px solid #9ca3af;
+  box-sizing: border-box;
+  padding: 6px;
+  font-size: 0.75rem;
+  line-height: 1.1;
+  height: 100%;
+  z-index: 100 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden !important;
+  color: #1f2937;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.overlay-event .font-bold {
+  font-size: 0.75rem;
+  line-height: 1.1;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overlay-event .text-xs {
+  font-size: 0.7rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ========================================
+   STYLES COMMUNS POUR PRINT & PREVIEW
+   (densité optimisée pour lisibilité A4)
+   ======================================== */
+
+.print-preview .print-header-title {
+  font-size: 12pt !important;
+  margin-bottom: 1mm !important;
+  line-height: 1.2 !important;
+}
+
+.print-preview .print-header-stats {
+  font-size: 9pt !important;
+  margin-bottom: 2mm !important;
+  line-height: 1.2 !important;
+}
+
+.print-preview .print-table {
+  width: 100% !important;
+  table-layout: auto !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  font-size: 8.5pt !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.print-preview .print-table tbody {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.print-preview .print-table tr {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.print-preview .print-table td,
+.print-preview .print-table th {
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 1 !important;
+}
+
+.print-preview .print-table td.has-overlay,
+.print-preview .print-table th.has-overlay {
+  z-index: 50 !important;
+}
+
+.print-preview .print-table-time-header,
+.print-preview .print-table-time-cell {
+  width: 13mm !important;
+  min-width: 13mm !important;
+  max-width: 13mm !important;
+  white-space: nowrap !important;
+  font-size: 7.5pt !important;
+  padding: 1.2mm !important;
+}
+
+.print-preview .print-table-day-header {
+  font-size: 9pt !important;
+  padding: 1.4mm !important;
+  white-space: nowrap !important;
+}
+
+.print-preview .print-table-row {
+  height: 10mm !important;
+  min-height: 10mm !important;
+}
+
+.print-preview .print-table th,
+.print-preview .print-table td {
+  padding: 1.3mm !important;
+  vertical-align: top !important;
+  line-height: 1.1 !important;
+}
+
+.print-preview .print-table-event-cell,
+.print-preview .print-table-empty-cell {
+  padding: 1.3mm !important;
+  font-size: 8pt !important;
+}
+
+.print-preview .overlay-event {
+  padding: 1mm !important;
+  font-size: 8pt !important;
+  line-height: 1.1 !important;
+  overflow: hidden !important;
+}
+
+.print-preview .overlay-event .font-bold {
+  font-size: 8pt !important;
+  line-height: 1.1 !important;
+  margin-bottom: 0.5mm !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.print-preview .overlay-event .text-xs {
+  font-size: 7pt !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* ========================================
+   PRINTING STATE (body.printing)
+   Applique les styles d'impression AVANT window.print()
+   pour mesurer dans l'état exact du print
+   ======================================== */
+body.printing .no-print,
+body.printing #zoom-debug {
+  display: none !important;
+}
+
+body.printing {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.printing #print-page {
+  width: 297mm !important;
+  height: 210mm !important;
+  overflow: hidden !important;
+  position: relative !important;
+  margin: 0 auto !important;
+  padding-top: 3mm !important;
+  padding-left: 3mm !important;
+  padding-right: 3mm !important;
+  padding-bottom: 3mm !important;
+  box-sizing: border-box !important;
+  background: white !important;
+}
+
+body.printing #print-fit-root {
+  width: 100% !important;
+  display: block !important;
+  zoom: var(--print-scale, 1) !important;
+  transform: none !important;
+  transform-origin: top left !important;
+  font-size: 14px !important;
+  line-height: 1.15 !important;
+}
+
+@supports not (zoom: 1) {
+  body.printing #print-fit-root {
+    transform: scale(var(--print-scale, 1)) !important;
+  }
+}
+
+body.printing #print-fit-root .event,
+body.printing #print-fit-root .overlay-event,
+body.printing #print-fit-root td,
+body.printing #print-fit-root th {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+body.printing #print-fit-root .print-header-title,
+body.printing #print-fit-root h1 {
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+  margin: 0 0 10px 0 !important;
+}
+
+body.printing .print-header-title,
+body.printing h1 {
+  font-size: 18pt !important;
+  line-height: 1.1 !important;
+  margin: 0 0 4mm 0 !important;
+}
+
+body.printing .print-header-compact {
+  height: auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin-bottom: 1.5mm !important;
+  padding-bottom: 1mm !important;
+  flex-shrink: 0;
+}
+
+body.printing .print-table-wrapper {
+  overflow: visible !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+body.printing .print-header-title {
+  font-size: 15px !important;
+  margin-bottom: 1mm !important;
+  line-height: 1.1 !important;
+}
+
+body.printing .print-header-stats {
+  font-size: 11px !important;
+  margin-bottom: 1.5mm !important;
+  line-height: 1.1 !important;
+}
+
+body.printing .print-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  font-size: 9px !important;
+  line-height: 1.1 !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+body.printing #print-fit-root table,
+body.printing #print-fit-root .print-table,
+body.printing #print-fit-root .print-table table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+body.printing #print-fit-root th,
+body.printing #print-fit-root td {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body.printing .print-table tbody {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+body.printing .print-table tr {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+body.printing .print-table td,
+body.printing .print-table th {
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 1 !important;
+}
+
+body.printing .print-table td.has-overlay,
+body.printing .print-table th.has-overlay {
+  z-index: 50 !important;
+}
+
+body.printing .print-table-time-header,
+body.printing .print-table-time-cell {
+  width: 13mm !important;
+  min-width: 13mm !important;
+  max-width: 13mm !important;
+  white-space: nowrap !important;
+  font-size: 9px !important;
+  padding: 0.8mm !important;
+}
+
+body.printing .print-table-day-header {
+  font-size: 11px !important;
+  padding: 1mm !important;
+  white-space: nowrap !important;
+}
+
+body.printing .print-table-row {
+  height: 7.5mm !important;
+  min-height: 7.5mm !important;
+  max-height: 7.5mm !important;
+}
+
+body.printing .print-table th,
+body.printing .print-table td {
+  padding: 1mm !important;
+  vertical-align: top !important;
+  line-height: 1.1 !important;
+  background-clip: padding-box !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+body.printing .print-table-time-cell {
+  height: 7.5mm !important;
+  max-height: 7.5mm !important;
+  background-color: #f7fafc !important;
+}
+
+body.printing .print-table-event-cell,
+body.printing .print-table-empty-cell {
+  padding: 1mm !important;
+  font-size: 9px !important;
+  height: 7.5mm !important;
+}
+
+body.printing .print-table-empty-cell {
+  background-color: #fafafa !important;
+}
+
+body.printing .print-table-event-cell {
+  position: relative !important;
+  z-index: 1 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+body.printing .event-overlay,
+body.printing .event-prise-en-charge {
+  position: relative !important;
+  z-index: 5 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+body.printing .overlays-layer {
+  position: absolute !important;
+  z-index: 100 !important;
+  pointer-events: none !important;
+}
+
+body.printing .overlay-event {
+  position: absolute !important;
+  z-index: 100 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+  background-color: white !important;
+  box-shadow: none !important;
+  padding: 1mm !important;
+  font-size: 8px !important;
+  line-height: 1.1 !important;
+  overflow: hidden !important;
+}
+
+body.printing .overlay-event .font-bold {
+  font-size: 8px !important;
+  line-height: 1.1 !important;
+  margin-bottom: 0.5mm !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body.printing .overlay-event .text-xs {
+  font-size: 7px !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body.printing .print-table thead {
+  display: table-header-group !important;
+}
+
+body.printing .print-table tbody {
+  display: table-row-group !important;
+}
+
+body.printing .print-table tr {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+body.printing .aesh-badge {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+.print-page .bg-blue-100,
+body.printing .bg-blue-100 {
+  background-color: #d1fae5 !important;
+}
+
+.print-page .bg-green-100,
+body.printing .bg-green-100 {
+  background-color: #dbeafe !important;
+}
+
+body.printing .bg-orange-100 {
+  background-color: #ffedd5 !important;
+}
+
+body.printing .bg-pink-100 {
+  background-color: #fce7f3 !important;
+}
+
+body.printing .bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+
+body.printing .bg-white {
+  background-color: #ffffff !important;
+}
+
+body.printing .bg-blue-500 {
+  background-color: #3b82f6 !important;
+}
+
+body.printing .bg-orange-500 {
+  background-color: #f97316 !important;
+}
+
+body.printing .text-blue-800 {
+  color: #1e40af !important;
+}
+
+body.printing .text-green-800 {
+  color: #166534 !important;
+}
+
+body.printing .text-pink-800 {
+  color: #9f1239 !important;
+}
+
+body.printing .text-orange-800 {
+  color: #9a3412 !important;
+}
+
+body.printing .text-gray-800 {
+  color: #1f2937 !important;
+}
+
+body.printing .text-white {
+  color: #ffffff !important;
+}
+
+body.printing .border-blue-400 {
+  border-color: #60a5fa !important;
+}
+
+body.printing .border-green-400 {
+  border-color: #4ade80 !important;
+}
+
+body.printing .border-pink-400 {
+  border-color: #f472b6 !important;
+}
+
+body.printing .border-orange-400 {
+  border-color: #fb923c !important;
+}
+
+body.printing .border-gray-400 {
+  border-color: #9ca3af !important;
+}
+
+body.printing .border-blue-600 {
+  border-color: #2563eb !important;
+}
+
+body.printing .border-orange-600 {
+  border-color: #ea580c !important;
+}
+
+body.printing .bg-fafafa,
+body.printing .print-table-empty-cell {
+  background-color: #fafafa !important;
+}
+
+body.printing .bg-f7fafc,
+body.printing .print-table-time-cell {
+  background-color: #f7fafc !important;
+}
+
+/* ========================================
+   STYLES @media print UNIQUEMENT
+   ======================================== */
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print,
+  .filename-banner,
+  #zoom-debug {
+    display: none !important;
+  }
+
+  html, body {
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-page {
+    padding-top: 0 !important;
+  }
+
+  .print-individual-content {
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  #print-page {
+    width: 100% !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  #print-fit-root {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 194mm !important;
+    overflow: hidden !important;
+  }
+
+  .print-header-compact {
+    flex-shrink: 0 !important;
+    margin-bottom: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .print-header-title {
+    font-size: 12pt !important;
+    margin-bottom: 2px !important;
+  }
+
+  .print-header-stats {
+    font-size: 8.5pt !important;
+  }
+
+  .print-table-wrapper {
+    flex: 1 !important;
+    overflow: hidden !important;
+    max-height: none !important;
+  }
+
+  table.print-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    font-size: 7pt !important;
+  }
+
+  table.print-table th,
+  table.print-table td {
+    padding: 2px 3px !important;
+    font-size: 7pt !important;
+  }
+}
