@@ -201,7 +201,7 @@ export function PrintView() {
               Retour
             </button>
             <div className="[&>button]:bg-white/20 [&>button]:hover:bg-white/30 [&>button]:text-white [&>button]:border-white/30 [&>button]:shadow-none [&>button]:text-sm [&>button]:px-3 [&>button]:py-1.5">
-              <HomeButton onNavigateHome={() => navigate('/')} />
+              <HomeButton onNavigateHome={() => { window.location.href = '/'; }} />
             </div>
             <div className="border-l border-white/30 pl-3">
               <p className="text-xs font-medium opacity-90">Fichier :</p>
