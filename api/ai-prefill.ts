@@ -36,7 +36,8 @@ Chaque créneau doit être classé dans l'un de ces types :
 - PRISE_EN_CHARGE : interventions extérieures (orthophonie, psychologue, kiné, etc.)
 - VIE_SCOLAIRE : récréation, cantine, temps de vie scolaire
 
-Réponds UNIQUEMENT avec un JSON valide, sans texte avant ni après, sans backticks.
+IMPORTANT : Ta réponse doit commencer IMMÉDIATEMENT par { et se terminer par }. Aucun mot avant ou après. Pas d'explication. Pas de commentaire. Uniquement le JSON brut.
+
 Format exact :
 {
   "events": [
@@ -90,7 +91,6 @@ Règles :
         },
       ];
     } else {
-      // Texte brut (décodé côté client et envoyé comme string)
       messageContent = [
         {
           type: 'text',
@@ -110,7 +110,11 @@ Règles :
         model: 'claude-opus-4-6',
         max_tokens: 4000,
         system: systemPrompt,
-        messages: [{ role: 'user', content: messageContent }],
+        messages: [
+          { role: 'user', content: messageContent },
+          // Préfixage : force la réponse à commencer par { dès le premier token
+          { role: 'assistant', content: '{' }
+        ],
       }),
     });
 
@@ -121,15 +125,24 @@ Règles :
     }
 
     const data = await anthropicRes.json();
-    const text = data.content
+    const rawText = data.content
       .filter((c: any) => c.type === 'text')
       .map((c: any) => c.text)
       .join('');
 
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    // Réassembler avec le préfixe { qu'on a injecté
+    const fullText = '{' + rawText;
 
+    // Nettoyage défensif : extraire le JSON même si du texte parasite subsiste
+    const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('Aucun JSON trouvé dans la réponse IA:', fullText.slice(0, 200));
+      return res.status(500).json({ error: 'La réponse de l\'IA ne contient pas de JSON valide' });
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
     return res.status(200).json(parsed);
+
   } catch (err: any) {
     console.error('Handler error:', err);
     return res.status(500).json({ error: err.message || 'Erreur interne' });
