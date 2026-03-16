@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Calculator, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Undo, Copy, FileDown } from 'lucide-react';
+import { ArrowLeft, Plus, Calculator, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Undo, Copy, FileDown, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Student, Event, EventType } from '../lib/database.types';
 import { DAYS, timeToMinutes, calculateEventDuration } from '../lib/timeUtils';
@@ -10,6 +10,7 @@ import { EventBlock } from './EventBlock';
 import { SummaryStats } from './SummaryStats';
 import { PdfViewer } from './PdfViewer';
 import { DuplicateTimetableModal } from './DuplicateTimetableModal';
+import { AiPrefillModal } from './AiPrefillModal';
 import { UndoToast } from './UndoToast';
 import { HomeButton } from './HomeButton';
 import { useUndoHistory } from '../hooks/useUndoHistory';
@@ -52,6 +53,7 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
   const [zoom, setZoom] = useState(1);
   const [showWednesday, setShowWednesday] = useState(true);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
   const [periodName, setPeriodName] = useState('');
   const [undoAction, setUndoAction] = useState<UndoAction | null>(null);
 
@@ -595,6 +597,14 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                     <span>Imprimer / PDF</span>
                   </button>
                   <button
+                    onClick={() => setShowAiModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-100 hover:bg-violet-200 text-violet-700 rounded-lg transition-colors font-semibold"
+                    title="Pré-remplir le planning depuis un document"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    <span>Pré-remplir avec l'IA</span>
+                  </button>
+                  <button
                     onClick={() => setShowDuplicateModal(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors font-semibold"
                     title="Dupliquer cet emploi du temps vers d'autres élèves"
@@ -778,6 +788,17 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
             setSelectedEvent(null);
             setNewEventData(null);
             setUndoAction(null);
+          }}
+        />
+      )}
+
+      {showAiModal && (
+        <AiPrefillModal
+          student={student}
+          onClose={() => setShowAiModal(false)}
+          onSuccess={() => {
+            setShowAiModal(false);
+            loadEvents();
           }}
         />
       )}
