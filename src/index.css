@@ -767,7 +767,7 @@ body.printing .print-table-time-cell {
 @media print {
   @page {
     size: A4 landscape;
-    margin: 8mm;
+    margin: 5mm;
   }
 
   * {
@@ -782,7 +782,7 @@ body.printing .print-table-time-cell {
   }
 
   html, body {
-    height: 100% !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
   }
@@ -796,6 +796,7 @@ body.printing .print-table-time-cell {
     width: 100% !important;
   }
 
+  /* Laisser le zoom JS gérer le scale — ne pas écraser avec des font-size @media print */
   #print-page {
     width: 100% !important;
     page-break-inside: avoid !important;
@@ -803,44 +804,30 @@ body.printing .print-table-time-cell {
   }
 
   #print-fit-root {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    max-height: 194mm !important;
-    overflow: hidden !important;
+    /* Le zoom est appliqué par body.printing via JS — ne pas surcharger ici */
+    overflow: visible !important;
+    max-height: none !important;
   }
 
   .print-header-compact {
     flex-shrink: 0 !important;
-    margin-bottom: 4px !important;
-    padding-bottom: 4px !important;
-  }
-
-  .print-header-title {
-    font-size: 12pt !important;
     margin-bottom: 2px !important;
-  }
-
-  .print-header-stats {
-    font-size: 8.5pt !important;
+    padding-bottom: 2px !important;
   }
 
   .print-table-wrapper {
-    flex: 1 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     max-height: none !important;
   }
 
+  /* Empêcher les coupures de page dans le tableau */
   table.print-table {
-    width: 100% !important;
-    table-layout: fixed !important;
-    border-collapse: collapse !important;
-    font-size: 7pt !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  table.print-table th,
-  table.print-table td {
-    padding: 2px 3px !important;
-    font-size: 7pt !important;
+  table.print-table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }

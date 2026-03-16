@@ -467,10 +467,11 @@ export function PrintTableGrid({
       if (!tableRef.current) return;
 
       const table = tableRef.current;
+      const wrapper = table.parentElement;
       const thead = table.querySelector('thead') as HTMLElement;
       const tbody = table.querySelector('tbody') as HTMLElement;
 
-      if (!thead || !tbody) {
+      if (!thead || !tbody || !wrapper) {
         console.warn('⚠️ Missing table elements for overlay calculation');
         return;
       }
@@ -482,29 +483,33 @@ export function PrintTableGrid({
         return;
       }
 
-      // Get CONSTANT row height from first row (avoid sub-pixel accumulation)
-      const firstRow = tbody.querySelector('tr') as HTMLElement;
-      if (!firstRow) {
+      // Get all tbody rows for precise per-row positioning
+      const rows = tbody.querySelectorAll('tr');
+      if (rows.length === 0) {
         console.warn('⚠️ No rows found in tbody');
         return;
       }
-      const rowHeight = firstRow.offsetHeight;
 
-      // Get tbody top position relative to table
-      const tbodyTop = tbody.offsetTop;
-      const theadHeight = thead.offsetHeight;
+      // Use getBoundingClientRect relative to wrapper for accurate positioning
+      const wrapperRect = wrapper.getBoundingClientRect();
 
-      // Get table offset relative to wrapper (in case table has margins/padding)
-      const tableOffsetLeft = table.offsetLeft;
-      const tableOffsetTop = table.offsetTop;
+      // Build a map of row top positions relative to wrapper
+      const rowTops: number[] = [];
+      rows.forEach(row => {
+        const rowRect = row.getBoundingClientRect();
+        rowTops.push(rowRect.top - wrapperRect.top);
+      });
 
-      console.log('📏 Overlay calculation (offset-based):', {
-        theadHeight,
-        tbodyTop,
-        rowHeight,
-        tableOffsetLeft,
-        tableOffsetTop,
-        dayCount: dayHeaders.length,
+      // Add the bottom of the last row
+      const lastRow = rows[rows.length - 1] as HTMLElement;
+      const lastRowRect = lastRow.getBoundingClientRect();
+      const tableBottom = lastRowRect.bottom - wrapperRect.top;
+
+      console.log('📏 Overlay calculation (BoundingClientRect-based):', {
+        wrapperTop: wrapperRect.top,
+        rowCount: rows.length,
+        rowTops: rowTops.slice(0, 5),
+        tableBottom,
         overlayCount: allOverlayEvents.length
       });
 
@@ -513,8 +518,8 @@ export function PrintTableGrid({
       // Visual insets to create spacing around overlays (in pixels)
       const INSET_TOP = 2;
       const INSET_BOTTOM = 2;
-      const INSET_LEFT = 2;  // Horizontal gap between overlapping events
-      const INSET_RIGHT = 2; // Total gap = 4px between adjacent events
+      const INSET_LEFT = 2;
+      const INSET_RIGHT = 2;
 
       allOverlayEvents.forEach(overlay => {
         // Find day index in visible days
@@ -537,42 +542,36 @@ export function PrintTableGrid({
           return;
         }
 
-        // Get the specific day header for this overlay
         const dayHeader = dayHeaders[dayIndex] as HTMLElement;
 
-        // Get overlap info for positioning (choose correct map based on event type)
+        // Get overlap info for positioning
         const overlapInfo = overlay.type === 'PRISE_EN_CHARGE'
           ? overlayEventsWithOverlapInfo.get(overlay.id)
           : eventsWithOverlapInfo.get(overlay.id);
         const columnIndex = overlapInfo?.columnIndex ?? 0;
         const overlapCount = overlapInfo?.overlapCount ?? 1;
 
-        // HORIZONTAL: Use offsetLeft and offsetWidth (local coordinates, no sub-pixel issues)
-        // Add table offset to convert from table-relative to wrapper-relative coordinates
-        const baseDayLeft = tableOffsetLeft + dayHeader.offsetLeft;
-        const baseDayWidth = dayHeader.offsetWidth;
+        // HORIZONTAL: Use BoundingClientRect relative to wrapper
+        const dayHeaderRect = dayHeader.getBoundingClientRect();
+        const baseDayLeft = dayHeaderRect.left - wrapperRect.left;
+        const baseDayWidth = dayHeaderRect.width;
 
-        // If event has overlaps, subdivide the day column
         const columnWidth = baseDayWidth / overlapCount;
         const baseLeft = baseDayLeft + (columnIndex * columnWidth);
         const baseWidth = columnWidth;
 
-        // VERTICAL: Use constant rowHeight (no accumulation of rounding errors)
-        // Add table offset to convert from table-relative to wrapper-relative coordinates
-        const baseTop = tableOffsetTop + tbodyTop + (overlay.startIndex * rowHeight);
-        const baseHeight = (overlay.endIndex - overlay.startIndex) * rowHeight;
+        // VERTICAL: Use per-row top positions for exact placement
+        const startRowTop = rowTops[overlay.startIndex] ?? 0;
+        const endRowTop = overlay.endIndex < rowTops.length
+          ? rowTops[overlay.endIndex]
+          : tableBottom;
+        const baseHeight = endRowTop - startRowTop;
 
-        // HEIGHT CLAMPING FOR COMPACT DISPLAY
-        // For collective timetables, clamp height to avoid huge blocks
-        const MIN_HEIGHT = 44; // Minimum readable height in pixels
-        const MAX_HEIGHT = 90; // Maximum height to keep blocks compact
-        const clampedBaseHeight = Math.max(MIN_HEIGHT, Math.min(baseHeight, MAX_HEIGHT));
-
-        // Apply visual insets for spacing
+        // Apply visual insets — no arbitrary height clamping
         const left = baseLeft + INSET_LEFT;
         const width = baseWidth - INSET_LEFT - INSET_RIGHT;
-        const top = baseTop + INSET_TOP;
-        const height = clampedBaseHeight - INSET_TOP - INSET_BOTTOM;
+        const top = startRowTop + INSET_TOP;
+        const height = Math.max(20, baseHeight - INSET_TOP - INSET_BOTTOM);
 
         positions.push({
           event: overlay,
@@ -590,19 +589,17 @@ export function PrintTableGrid({
           endIndex: overlay.endIndex,
           columnIndex,
           overlapCount,
-          baseTop: `${baseTop}px`,
+          startRowTop: `${startRowTop}px`,
+          endRowTop: `${endRowTop}px`,
           baseHeight: `${baseHeight}px`,
-          baseLeft: `${baseLeft}px`,
-          baseWidth: `${baseWidth}px`,
           finalTop: `${top}px`,
           finalHeight: `${height}px`,
           finalLeft: `${left}px`,
           finalWidth: `${width}px`,
-          insets: `T:${INSET_TOP} B:${INSET_BOTTOM} L:${INSET_LEFT} R:${INSET_RIGHT}`
         });
       });
 
-      console.log(`✅ Calculated ${positions.length} overlay positions (offset-based, no BoundingClientRect)`);
+      console.log(`✅ Calculated ${positions.length} overlay positions (BoundingClientRect-based)`);
       setOverlayPositions(positions);
     };
 
@@ -626,7 +623,7 @@ export function PrintTableGrid({
       clearTimeout(timeoutId);
       window.removeEventListener('resize', handleResize);
     };
-  }, [snappedOverlayEvents, snappedOverlappingBaseEvents, visibleDays, timeSlots, isPrinting, eventsWithOverlapInfo]);
+  }, [snappedOverlayEvents, snappedOverlappingBaseEvents, visibleDays, timeSlots, isPrinting, eventsWithOverlapInfo, overlayEventsWithOverlapInfo]);
 
   return (
     <div className="print-table-wrapper relative" style={{ '--slot-count': timeSlots.length } as React.CSSProperties}>
