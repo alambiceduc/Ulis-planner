@@ -22,6 +22,7 @@ interface GroupedEvent {
   start_time: string;
   end_time: string;
   label: string | null;
+  labels: string[]; // tous les labels des slots fusionnés
   location: string | null;
   students: string[];
 }
@@ -31,6 +32,7 @@ interface StudentSummary {
   first_time: string;
   last_time: string;
   slots: GroupedEvent[];
+  labels: string[]; // matières/labels sans doublons dans l'ordre
 }
 
 
@@ -132,10 +134,12 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
     const groupedEvents = Array.from(timeSlotMap.entries()).map(([timeKey, evts]) => {
       const [start_time, end_time] = timeKey.split('-');
       const uniqueStudents = Array.from(new Set(evts.map(e => e.student.first_name))).sort();
+      const uniqueLabels = Array.from(new Set(evts.map(e => e.label).filter(Boolean))) as string[];
       return {
         start_time,
         end_time,
         label: evts[0].label,
+        labels: uniqueLabels,
         location: evts[0].location,
         students: uniqueStudents
       };
@@ -155,8 +159,10 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
 
       if (sameStudents) {
         last.end_time = event.end_time;
+        // Accumuler les labels sans doublons
+        event.labels.forEach(l => { if (!last.labels.includes(l)) last.labels.push(l); });
       } else {
-        merged.push({ ...event });
+        merged.push({ ...event, labels: [...event.labels] });
       }
     }
 
@@ -164,22 +170,27 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
   };
 
   const getStudentSummaries = (dayEvents: GroupedEvent[]): StudentSummary[] => {
-    const studentMap = new Map<string, GroupedEvent[]>();
+    const studentMap = new Map<string, { slots: GroupedEvent[], labels: string[] }>();
+
     dayEvents.forEach(event => {
       event.students.forEach(name => {
-        if (!studentMap.has(name)) studentMap.set(name, []);
-        studentMap.get(name)!.push(event);
+        if (!studentMap.has(name)) studentMap.set(name, { slots: [], labels: [] });
+        const entry = studentMap.get(name)!;
+        entry.slots.push(event);
+        // Accumuler les labels de ce slot pour cet élève
+        event.labels.forEach(l => { if (!entry.labels.includes(l)) entry.labels.push(l); });
       });
     });
 
     const summaries: StudentSummary[] = [];
-    studentMap.forEach((slots, name) => {
+    studentMap.forEach(({ slots, labels }, name) => {
       const sorted = [...slots].sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
       summaries.push({
         name,
         first_time: sorted[0].start_time,
         last_time: sorted[sorted.length - 1].end_time,
         slots: sorted,
+        labels,
       });
     });
 
@@ -360,7 +371,11 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
                                           </button>
                                           {expanded && (
                                             <div className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1">
-                                              {s.slots.map((slot, i) => (
+                                              {s.labels.length > 0 ? s.labels.map((label, i) => (
+                                                <span key={i} className="bg-white border border-blue-200 rounded px-1.5 py-0.5 text-gray-700">
+                                                  {label}
+                                                </span>
+                                              )) : s.slots.map((slot, i) => (
                                                 <span key={i} className="bg-white border border-blue-200 rounded px-1 py-0.5">
                                                   {slot.start_time}-{slot.end_time}
                                                 </span>
@@ -395,7 +410,11 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
                                           </button>
                                           {expanded && (
                                             <div className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1">
-                                              {s.slots.map((slot, i) => (
+                                              {s.labels.length > 0 ? s.labels.map((label, i) => (
+                                                <span key={i} className="bg-white border border-yellow-200 rounded px-1.5 py-0.5 text-gray-700">
+                                                  {label}
+                                                </span>
+                                              )) : s.slots.map((slot, i) => (
                                                 <span key={i} className="bg-white border border-yellow-200 rounded px-1 py-0.5">
                                                   {slot.start_time}-{slot.end_time}
                                                 </span>
@@ -430,7 +449,11 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
                                           </button>
                                           {expanded && (
                                             <div className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1">
-                                              {s.slots.map((slot, i) => (
+                                              {s.labels.length > 0 ? s.labels.map((label, i) => (
+                                                <span key={i} className="bg-white border border-green-200 rounded px-1.5 py-0.5 text-gray-700">
+                                                  {label}
+                                                </span>
+                                              )) : s.slots.map((slot, i) => (
                                                 <span key={i} className="bg-white border border-green-200 rounded px-1 py-0.5">
                                                   {slot.start_time}-{slot.end_time}
                                                 </span>
