@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Plus, Users, Calendar as CalendarIcon, Trash2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Calendar as CalendarIcon, Trash2, Edit2, Copy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Period, Student } from '../lib/database.types';
 import { HomeButton } from './HomeButton';
+import { CopyToPeriodModal } from './CopyToPeriodModal';
 
 interface StudentListProps {
   period: Period;
@@ -18,6 +19,7 @@ export function StudentList({ period, onBack, onSelectStudent, onViewSharedTimet
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copyStudent, setCopyStudent] = useState<Student | null>(null);
 
   useEffect(() => {
     loadStudents();
@@ -170,19 +172,36 @@ export function StudentList({ period, onBack, onSelectStudent, onViewSharedTimet
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  <button
-                    onClick={() => onSelectStudent(student)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    <span>Voir l'emploi du temps</span>
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onSelectStudent(student)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      <span>Voir l'EDT</span>
+                    </button>
+                    <button
+                      onClick={() => setCopyStudent(student)}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-colors"
+                      title="Dupliquer vers une autre période"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {copyStudent && (
+        <CopyToPeriodModal
+          student={copyStudent}
+          currentPeriod={period}
+          onClose={() => setCopyStudent(null)}
+        />
+      )}
 
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
