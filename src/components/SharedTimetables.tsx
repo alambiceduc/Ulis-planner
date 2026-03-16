@@ -104,46 +104,46 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
     const filteredEvents = getFilteredEvents();
     const dayEvents = filteredEvents.filter(e => e.day_of_week === day);
 
+    // 1. Grouper par créneau exact (même heure début-fin)
     const timeSlotMap = new Map<string, StudentEvent[]>();
-
     dayEvents.forEach(event => {
       const timeKey = `${event.start_time}-${event.end_time}`;
-      if (!timeSlotMap.has(timeKey)) {
-        timeSlotMap.set(timeKey, []);
-      }
+      if (!timeSlotMap.has(timeKey)) timeSlotMap.set(timeKey, []);
       timeSlotMap.get(timeKey)!.push(event);
     });
 
-    const groupedEvents = Array.from(timeSlotMap.entries()).map(([timeKey, events]) => {
+    const groupedEvents = Array.from(timeSlotMap.entries()).map(([timeKey, evts]) => {
       const [start_time, end_time] = timeKey.split('-');
-      const firstEvent = events[0];
-
-      const uniqueStudents = Array.from(new Set(events.map(e => e.student.first_name))).sort();
-
+      const uniqueStudents = Array.from(new Set(evts.map(e => e.student.first_name))).sort();
       return {
         start_time,
         end_time,
-        label: firstEvent.label,
-        location: firstEvent.location,
+        label: evts[0].label,
+        location: evts[0].location,
         students: uniqueStudents
       };
     });
 
-    groupedEvents.sort((a, b) => {
-      return timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
-    });
+    // 2. Trier par heure de début
+    groupedEvents.sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
 
-    console.log(`DEBUG_MERGE [Jour ${day}]:`, {
-      eventsInitiaux: dayEvents.length,
-      eventsFusionnes: groupedEvents.length,
-      details: groupedEvents.map(e => ({
-        horaire: `${e.start_time}-${e.end_time}`,
-        eleves: e.students.length,
-        prenoms: e.students.join(', ')
-      }))
-    });
+    // 3. Fusionner les créneaux consécutifs avec le même groupe d'élèves
+    const merged: GroupedEvent[] = [];
+    for (const event of groupedEvents) {
+      const last = merged[merged.length - 1];
+      const sameStudents =
+        last &&
+        last.end_time === event.start_time &&
+        last.students.join(',') === event.students.join(',');
 
-    return groupedEvents;
+      if (sameStudents) {
+        last.end_time = event.end_time;
+      } else {
+        merged.push({ ...event });
+      }
+    }
+
+    return merged;
   };
 
   const getEventsByPeriod = (dayEvents: GroupedEvent[]) => {
