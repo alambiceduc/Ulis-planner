@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Calculator, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Undo, Copy, FileDown, Sparkles, LayoutGrid } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -60,6 +60,7 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
   const [undoAction, setUndoAction] = useState<UndoAction | null>(null);
 
   const { captureState, undo, canUndo } = useUndoHistory(student.id);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const visibleDays = useMemo(() => {
     return showWednesday ? DAYS : DAYS.filter(day => day.id !== 3);
@@ -702,7 +703,7 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                   ))}
                 </div>
 
-                <div className="flex-1 grid gap-3" style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(220px, 1fr))` }}>
+                <div ref={gridRef} className="flex-1 grid gap-3 relative" style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(220px, 1fr))` }}>
                 {visibleDays.map((day) => {
                   const dayEvents = getSortedDayEvents(day.id);
                   const dayGaps = getDayGaps(day.id);
@@ -722,17 +723,13 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                         </button>
                       ) : (
                         <>
-                          {dayEvents.map((event) => {
+                          {dayEvents.filter(e => e.type !== 'PRISE_EN_CHARGE').map((event) => {
                             const { top, height } = getEventPosition(event);
-
-                            // PRISE_EN_CHARGE : toujours pleine largeur, z-index maximal
-                            const isPEC = event.type === 'PRISE_EN_CHARGE';
-                            const overlapInfo = isPEC ? undefined : overlapInfoMap.get(event.id);
+                            const overlapInfo = overlapInfoMap.get(event.id);
                             const colIndex = overlapInfo?.columnIndex ?? 0;
                             const colCount = overlapInfo?.overlapCount ?? 1;
-                            const widthPct = isPEC ? 100 : 100 / colCount;
-                            const leftPct = isPEC ? 0 : colIndex * widthPct;
-                            const zIdx = isPEC ? 999 : getEventZIndex(event);
+                            const widthPct = 100 / colCount;
+                            const leftPct = colIndex * widthPct;
 
                             return (
                               <div
@@ -743,7 +740,7 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                                   height: `${height}rem`,
                                   left: `calc(${leftPct}% + 0.25rem)`,
                                   width: `calc(${widthPct}% - 0.5rem)`,
-                                  zIndex: zIdx
+                                  zIndex: getEventZIndex(event)
                                 }}
                               >
                                 <EventBlock
@@ -799,6 +796,36 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                     </div>
                   );
                 })}
+
+                  {/* ── Couche PEC : au-dessus de toute la grille ── */}
+                  {visibleDays.flatMap((day, dayIndex) =>
+                    getSortedDayEvents(day.id)
+                      .filter(e => e.type === 'PRISE_EN_CHARGE')
+                      .map(event => {
+                        const { top, height } = getEventPosition(event);
+                        const colW = 100 / visibleDays.length;
+                        return (
+                          <div
+                            key={`pec-${event.id}`}
+                            style={{
+                              position: 'absolute',
+                              top: `${top}rem`,
+                              height: `${height}rem`,
+                              left: `calc(${dayIndex * colW}% + 0.25rem)`,
+                              width: `calc(${colW}% - 0.5rem)`,
+                              zIndex: 999,
+                            }}
+                          >
+                            <EventBlock
+                              event={event}
+                              heightRem={height}
+                              onEdit={handleEditEvent}
+                              onDelete={handleDeleteEvent}
+                            />
+                          </div>
+                        );
+                      })
+                  )}
               </div>
               </div>
             </div>
