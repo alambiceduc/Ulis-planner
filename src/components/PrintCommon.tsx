@@ -177,6 +177,14 @@ export function PrintCommon({ type, periodId, onFilenameGenerated, isPrinting = 
     start_time: string;
     end_time: string;
     students: string[];
+    labels: string[];
+  }
+
+  interface StudentSummary {
+    name: string;
+    first_time: string;
+    last_time: string;
+    labels: string[];
   }
 
   const getEventsForDay = (day: number): GroupedEvent[] => {
@@ -184,31 +192,60 @@ export function PrintCommon({ type, periodId, onFilenameGenerated, isPrinting = 
     const dayEvents = filteredEvents.filter(e => e.day_of_week === day);
 
     const timeSlotMap = new Map<string, StudentEvent[]>();
-
     dayEvents.forEach(event => {
       const timeKey = `${event.start_time}-${event.end_time}`;
-      if (!timeSlotMap.has(timeKey)) {
-        timeSlotMap.set(timeKey, []);
-      }
+      if (!timeSlotMap.has(timeKey)) timeSlotMap.set(timeKey, []);
       timeSlotMap.get(timeKey)!.push(event);
     });
 
-    const groupedEvents = Array.from(timeSlotMap.entries()).map(([timeKey, events]) => {
+    const groupedEvents = Array.from(timeSlotMap.entries()).map(([timeKey, evts]) => {
       const [start_time, end_time] = timeKey.split('-');
-      const uniqueStudents = Array.from(new Set(events.map(e => e.student.first_name))).sort();
-
-      return {
-        start_time,
-        end_time,
-        students: uniqueStudents
-      };
+      const uniqueStudents = Array.from(new Set(evts.map(e => e.student.first_name))).sort();
+      const uniqueLabels = Array.from(new Set(evts.map(e => e.label).filter(Boolean))) as string[];
+      return { start_time, end_time, students: uniqueStudents, labels: uniqueLabels };
     });
 
-    groupedEvents.sort((a, b) => {
-      return timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
+    groupedEvents.sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
+
+    // Fusionner les créneaux consécutifs avec le même groupe d'élèves
+    const merged: GroupedEvent[] = [];
+    for (const event of groupedEvents) {
+      const last = merged[merged.length - 1];
+      const sameStudents = last &&
+        last.end_time === event.start_time &&
+        last.students.join(',') === event.students.join(',');
+      if (sameStudents) {
+        last.end_time = event.end_time;
+        event.labels.forEach(l => { if (!last.labels.includes(l)) last.labels.push(l); });
+      } else {
+        merged.push({ ...event, labels: [...event.labels] });
+      }
+    }
+    return merged;
+  };
+
+  const getStudentSummaries = (dayEvents: GroupedEvent[]): StudentSummary[] => {
+    const studentMap = new Map<string, { slots: GroupedEvent[], labels: string[] }>();
+    dayEvents.forEach(event => {
+      event.students.forEach(name => {
+        if (!studentMap.has(name)) studentMap.set(name, { slots: [], labels: [] });
+        const entry = studentMap.get(name)!;
+        entry.slots.push(event);
+        event.labels.forEach(l => { if (!entry.labels.includes(l)) entry.labels.push(l); });
+      });
     });
 
-    return groupedEvents;
+    const summaries: StudentSummary[] = [];
+    studentMap.forEach(({ slots, labels }, name) => {
+      const sorted = [...slots].sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
+      summaries.push({
+        name,
+        first_time: sorted[0].start_time,
+        last_time: sorted[sorted.length - 1].end_time,
+        labels,
+      });
+    });
+    return summaries.sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const getEventsByPeriod = (dayEvents: GroupedEvent[]) => {
@@ -464,30 +501,18 @@ export function PrintCommon({ type, periodId, onFilenameGenerated, isPrinting = 
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {eventsByPeriod.MATIN.length > 0 && (
-                            <div style={{
-                              border: '1px solid #bfdbfe',
-                              borderRadius: '4px',
-                              backgroundColor: '#eff6ff',
-                              padding: '6px'
-                            }}>
-                              <div style={{
-                                fontWeight: 'bold',
-                                color: '#1e40af',
-                                fontSize: '10px',
-                                marginBottom: '4px'
-                              }}>
-                                MATIN
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                {eventsByPeriod.MATIN.map((event, idx) => (
-                                  <div key={idx} style={{ fontSize: '10px', lineHeight: '1.3' }}>
-                                    <span style={{ fontWeight: 'bold', color: '#111827' }}>
-                                      {event.start_time}-{event.end_time}
-                                    </span>
-                                    <span style={{ color: '#374151' }}> : </span>
-                                    <span style={{ fontWeight: '500', color: '#1f2937' }}>
-                                      {event.students.join(', ')}
-                                    </span>
+                            <div style={{ border: '1px solid #bfdbfe', borderRadius: '4px', backgroundColor: '#eff6ff', padding: '6px' }}>
+                              <div style={{ fontWeight: 'bold', color: '#1e40af', fontSize: '10px', marginBottom: '4px' }}>MATIN</div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {getStudentSummaries(eventsByPeriod.MATIN).map((s, idx) => (
+                                  <div key={idx} style={{ fontSize: '10px', lineHeight: '1.4' }}>
+                                    <span style={{ fontWeight: 'bold', color: '#111827' }}>{s.name}</span>
+                                    <span style={{ color: '#6b7280' }}> {s.first_time}→{s.last_time}</span>
+                                    {s.labels.length > 0 && (
+                                      <div style={{ color: '#4b5563', fontSize: '9px', marginLeft: '6px' }}>
+                                        {s.labels.join(' · ')}
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -495,30 +520,18 @@ export function PrintCommon({ type, periodId, onFilenameGenerated, isPrinting = 
                           )}
 
                           {eventsByPeriod.MIDI.length > 0 && (
-                            <div style={{
-                              border: '1px solid #fde68a',
-                              borderRadius: '4px',
-                              backgroundColor: '#fef9c3',
-                              padding: '6px'
-                            }}>
-                              <div style={{
-                                fontWeight: 'bold',
-                                color: '#92400e',
-                                fontSize: '10px',
-                                marginBottom: '4px'
-                              }}>
-                                MIDI
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                {eventsByPeriod.MIDI.map((event, idx) => (
-                                  <div key={idx} style={{ fontSize: '10px', lineHeight: '1.3' }}>
-                                    <span style={{ fontWeight: 'bold', color: '#111827' }}>
-                                      {event.start_time}-{event.end_time}
-                                    </span>
-                                    <span style={{ color: '#374151' }}> : </span>
-                                    <span style={{ fontWeight: '500', color: '#1f2937' }}>
-                                      {event.students.join(', ')}
-                                    </span>
+                            <div style={{ border: '1px solid #fde68a', borderRadius: '4px', backgroundColor: '#fef9c3', padding: '6px' }}>
+                              <div style={{ fontWeight: 'bold', color: '#92400e', fontSize: '10px', marginBottom: '4px' }}>MIDI</div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {getStudentSummaries(eventsByPeriod.MIDI).map((s, idx) => (
+                                  <div key={idx} style={{ fontSize: '10px', lineHeight: '1.4' }}>
+                                    <span style={{ fontWeight: 'bold', color: '#111827' }}>{s.name}</span>
+                                    <span style={{ color: '#6b7280' }}> {s.first_time}→{s.last_time}</span>
+                                    {s.labels.length > 0 && (
+                                      <div style={{ color: '#4b5563', fontSize: '9px', marginLeft: '6px' }}>
+                                        {s.labels.join(' · ')}
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -526,30 +539,18 @@ export function PrintCommon({ type, periodId, onFilenameGenerated, isPrinting = 
                           )}
 
                           {eventsByPeriod['APRES-MIDI'].length > 0 && (
-                            <div style={{
-                              border: '1px solid #bbf7d0',
-                              borderRadius: '4px',
-                              backgroundColor: '#f0fdf4',
-                              padding: '6px'
-                            }}>
-                              <div style={{
-                                fontWeight: 'bold',
-                                color: '#166534',
-                                fontSize: '10px',
-                                marginBottom: '4px'
-                              }}>
-                                APRÈS-MIDI
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                {eventsByPeriod['APRES-MIDI'].map((event, idx) => (
-                                  <div key={idx} style={{ fontSize: '10px', lineHeight: '1.3' }}>
-                                    <span style={{ fontWeight: 'bold', color: '#111827' }}>
-                                      {event.start_time}-{event.end_time}
-                                    </span>
-                                    <span style={{ color: '#374151' }}> : </span>
-                                    <span style={{ fontWeight: '500', color: '#1f2937' }}>
-                                      {event.students.join(', ')}
-                                    </span>
+                            <div style={{ border: '1px solid #bbf7d0', borderRadius: '4px', backgroundColor: '#f0fdf4', padding: '6px' }}>
+                              <div style={{ fontWeight: 'bold', color: '#166534', fontSize: '10px', marginBottom: '4px' }}>APRÈS-MIDI</div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {getStudentSummaries(eventsByPeriod['APRES-MIDI']).map((s, idx) => (
+                                  <div key={idx} style={{ fontSize: '10px', lineHeight: '1.4' }}>
+                                    <span style={{ fontWeight: 'bold', color: '#111827' }}>{s.name}</span>
+                                    <span style={{ color: '#6b7280' }}> {s.first_time}→{s.last_time}</span>
+                                    {s.labels.length > 0 && (
+                                      <div style={{ color: '#4b5563', fontSize: '9px', marginLeft: '6px' }}>
+                                        {s.labels.join(' · ')}
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>
