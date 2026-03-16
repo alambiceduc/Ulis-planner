@@ -7,6 +7,7 @@ import { StudentList } from './components/StudentList';
 import { TimetableGrid } from './components/TimetableGrid';
 import { SharedTimetables } from './components/SharedTimetables';
 import { PrintView } from './components/PrintView';
+import { PrintPicto } from './components/PrintPicto';
 import type { Period, Student } from './lib/database.types';
 
 type View = 'periods' | 'students' | 'timetable' | 'shared';
@@ -96,6 +97,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/print" element={<PrintView />} />
+          <Route path="/print-picto" element={<PrintPicto />} />
           <Route path="/*" element={<AppContent />} />
         </Routes>
       </BrowserRouter>

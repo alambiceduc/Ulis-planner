@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Calculator, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Undo, Copy, FileDown, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, Calculator, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Undo, Copy, FileDown, Sparkles, LayoutGrid } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Student, Event, EventType } from '../lib/database.types';
 import { DAYS, timeToMinutes, calculateEventDuration } from '../lib/timeUtils';
@@ -596,6 +596,21 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                   >
                     <FileDown className="w-5 h-5" />
                     <span>Imprimer / PDF</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams({
+                        studentId: student.id,
+                        periodId: student.period_id,
+                        showWednesday: String(showWednesday)
+                      });
+                      navigate(`/print-picto?${params.toString()}`);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors font-semibold"
+                    title="Imprimer un EDT adapté avec pictogrammes"
+                  >
+                    <LayoutGrid className="w-5 h-5" />
+                    <span>EDT pictogrammes</span>
                   </button>
                   <button
                     onClick={() => setShowAiModal(true)}
