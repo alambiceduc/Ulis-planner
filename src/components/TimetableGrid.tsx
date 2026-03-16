@@ -50,7 +50,7 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [newEventData, setNewEventData] = useState<{ day: number; startTime: string } | null>(null);
   const [showStats, setShowStats] = useState(false);
-  const [showPdf, setShowPdf] = useState(true);
+  const [showPdf, setShowPdf] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [showWednesday, setShowWednesday] = useState(true);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
