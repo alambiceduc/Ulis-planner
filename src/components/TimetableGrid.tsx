@@ -724,11 +724,15 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                         <>
                           {dayEvents.map((event) => {
                             const { top, height } = getEventPosition(event);
-                            const overlapInfo = overlapInfoMap.get(event.id);
+
+                            // PRISE_EN_CHARGE : toujours pleine largeur, z-index maximal
+                            const isPEC = event.type === 'PRISE_EN_CHARGE';
+                            const overlapInfo = isPEC ? undefined : overlapInfoMap.get(event.id);
                             const colIndex = overlapInfo?.columnIndex ?? 0;
                             const colCount = overlapInfo?.overlapCount ?? 1;
-                            const widthPct = 100 / colCount;
-                            const leftPct = colIndex * widthPct;
+                            const widthPct = isPEC ? 100 : 100 / colCount;
+                            const leftPct = isPEC ? 0 : colIndex * widthPct;
+                            const zIdx = isPEC ? 999 : getEventZIndex(event);
 
                             return (
                               <div
@@ -739,7 +743,7 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                                   height: `${height}rem`,
                                   left: `calc(${leftPct}% + 0.25rem)`,
                                   width: `calc(${widthPct}% - 0.5rem)`,
-                                  zIndex: getEventZIndex(event)
+                                  zIndex: zIdx
                                 }}
                               >
                                 <EventBlock
