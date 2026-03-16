@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Calendar, LogOut, BookOpen } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { Period, PeriodName } from '../lib/database.types';
 
@@ -14,7 +13,6 @@ interface PeriodSelectorProps {
 
 export function PeriodSelector({ onSelectPeriod }: PeriodSelectorProps) {
   const { signOut, user } = useAuth();
-  const navigate = useNavigate();
   const navigate = useNavigate();
   const [periods, setPeriods] = useState<Period[]>([]);
   const [loading, setLoading] = useState(true);
