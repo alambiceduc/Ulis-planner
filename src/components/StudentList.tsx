@@ -59,7 +59,19 @@ export function StudentList({ period, onBack, onSelectStudent, onViewSharedTimet
       setFirstName('');
       setLastName('');
       setShowAddModal(false);
-      loadStudents();
+      const { data: newStudent } = await supabase
+        .from('students')
+        .select('*')
+        .eq('period_id', period.id)
+        .eq('first_name', firstName)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (newStudent) {
+        onSelectStudent(newStudent);
+      } else {
+        loadStudents();
+      }
     }
     setLoading(false);
   };
