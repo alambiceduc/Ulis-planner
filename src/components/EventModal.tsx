@@ -129,16 +129,8 @@ export function EventModal({ student, event, initialDay, initialStartTime, onClo
           }
         }
 
-        if (daysToDelete.length > 0) {
-          const eventsToDelete = relatedEvents.filter(e => daysToDelete.includes(e.day_of_week));
-          for (const evt of eventsToDelete) {
-            const { error } = await supabase
-              .from('events')
-              .delete()
-              .eq('id', evt.id);
-            if (error) throw error;
-          }
-        }
+        // Les jours décochés ne sont PAS supprimés — ils restent inchangés.
+        // Seuls les jours encore cochés sont mis à jour, et les nouveaux jours sont créés.
 
         if (daysToCreate.length > 0) {
           const eventsToInsert = daysToCreate.map(day => ({
@@ -254,7 +246,7 @@ export function EventModal({ student, event, initialDay, initialStartTime, onClo
             </div>
             <p className="text-xs text-gray-500 mt-2">
               {event
-                ? 'Cochez/décochez les jours concernés - Les modifications s\'appliqueront à tous les jours sélectionnés'
+                ? 'Cochez les jours à modifier. Les jours décochés restent inchangés.'
                 : 'Sélectionnez un ou plusieurs jours où ce créneau se répète'
               }
             </p>
