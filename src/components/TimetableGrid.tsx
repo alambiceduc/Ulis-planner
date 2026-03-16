@@ -13,9 +13,9 @@ import { DuplicateTimetableModal } from './DuplicateTimetableModal';
 import { AiPrefillModal } from './AiPrefillModal';
 import { UndoToast } from './UndoToast';
 import { HomeButton } from './HomeButton';
+import { PhotosPanel } from './PhotosPanel';
 import { useUndoHistory } from '../hooks/useUndoHistory';
 import { getEventZIndex } from '../utils/eventPriority';
-import { detectOverlapsAllDays } from '../utils/overlapDetection';
 
 interface TimetableGridProps {
   student: Student;
@@ -50,7 +50,7 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [newEventData, setNewEventData] = useState<{ day: number; startTime: string } | null>(null);
   const [showStats, setShowStats] = useState(false);
-  const [showPdf, setShowPdf] = useState(false);
+  const [showPdf, setShowPdf] = useState(true);
   const [zoom, setZoom] = useState(1);
   const [showWednesday, setShowWednesday] = useState(true);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
@@ -252,12 +252,6 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
 
     return gaps;
   };
-
-
-  // Calcul des chevauchements pour tous les événements (grille principale)
-  const overlapInfoMap = useMemo(() => {
-    return detectOverlapsAllDays(events, timeToMinutes);
-  }, [events]);
 
   useEffect(() => {
     loadEvents();
@@ -644,6 +638,8 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                 </div>
               )}
 
+              <PhotosPanel student={student} onUpdate={loadStudent} />
+
               <div className="mb-4 flex gap-4">
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <input
@@ -707,21 +703,15 @@ export function TimetableGrid({ student: initialStudent, onBack, onNavigateHome 
                         <>
                           {dayEvents.map((event) => {
                             const { top, height } = getEventPosition(event);
-                            const overlapInfo = overlapInfoMap.get(event.id);
-                            const colIndex = overlapInfo?.columnIndex ?? 0;
-                            const colCount = overlapInfo?.overlapCount ?? 1;
-                            const widthPct = 100 / colCount;
-                            const leftPct = colIndex * widthPct;
 
                             return (
                               <div
                                 key={event.id}
-                                className="absolute"
+                                className="absolute left-0 right-0"
                                 style={{
                                   top: `${top}rem`,
                                   height: `${height}rem`,
-                                  left: `calc(${leftPct}% + 0.25rem)`,
-                                  width: `calc(${widthPct}% - 0.5rem)`,
+                                  padding: '0 0.5rem',
                                   zIndex: getEventZIndex(event)
                                 }}
                               >

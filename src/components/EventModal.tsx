@@ -4,6 +4,7 @@ import { X, AlignVerticalJustifyCenter, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Student, Event, EventType } from '../lib/database.types';
 import { DAYS } from '../lib/timeUtils';
+import { PICTO_LIST, getAutoPicto } from '../utils/pictoMap';
 
 interface EventModalProps {
   student: Student;
@@ -31,6 +32,7 @@ export function EventModal({ student, event, initialDay, initialStartTime, onClo
   const [aesh, setAesh] = useState(event?.aesh || false);
   const [label, setLabel] = useState(event?.label || '');
   const [location, setLocation] = useState(event?.location || '');
+  const [picto, setPicto] = useState<string>(event?.picto || '');
   const [loading, setLoading] = useState(false);
   const [relatedEvents, setRelatedEvents] = useState<Event[]>([]);
 
@@ -111,7 +113,8 @@ export function EventModal({ student, event, initialDay, initialStartTime, onClo
         type,
         aesh: type === 'VIE_SCOLAIRE' ? false : aesh,
         label,
-        location
+        location,
+        picto: picto || null
       };
 
       try {
@@ -168,7 +171,8 @@ export function EventModal({ student, event, initialDay, initialStartTime, onClo
         type,
         aesh: type === 'VIE_SCOLAIRE' ? false : aesh,
         label,
-        location
+        location,
+        picto: picto || null
       }));
 
       const { error } = await supabase
@@ -343,7 +347,45 @@ export function EventModal({ student, event, initialDay, initialStartTime, onClo
             />
           </div>
 
-          {type !== 'VIE_SCOLAIRE' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pictogramme
+            </label>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">{picto || getAutoPicto(label)}</span>
+              <span className="text-xs text-gray-500">
+                {picto ? 'Personnalisé' : 'Auto (basé sur le libellé)'}
+              </span>
+              {picto && (
+                <button
+                  type="button"
+                  onClick={() => setPicto('')}
+                  className="text-xs text-gray-400 hover:text-gray-600 underline"
+                >
+                  Réinitialiser
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5 p-2 bg-gray-50 rounded-lg border border-gray-200 max-h-28 overflow-y-auto">
+              {PICTO_LIST.map((p) => (
+                <button
+                  key={p.emoji}
+                  type="button"
+                  onClick={() => setPicto(p.emoji)}
+                  title={p.label}
+                  className={`text-xl rounded p-0.5 transition-all hover:scale-110 ${
+                    (picto || getAutoPicto(label)) === p.emoji
+                      ? 'ring-2 ring-blue-500 bg-blue-50'
+                      : 'hover:bg-gray-200'
+                  }`}
+                >
+                  {p.emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
+                    {type !== 'VIE_SCOLAIRE' && (
             <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg border border-orange-200">
               <input
                 type="checkbox"

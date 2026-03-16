@@ -65,6 +65,10 @@ export interface Database {
           reference_timetable_pdf_url: string | null;
           include_vie_scolaire_in_percentages: boolean;
           overlay_period_profile_id: string | null;
+          photo_student_url: string | null;
+          photo_teacher_url: string | null;
+          photo_coordo_url: string | null;
+          photo_aesh_url: string | null;
           created_at: string;
         };
         Insert: {
@@ -76,6 +80,10 @@ export interface Database {
           reference_timetable_pdf_url?: string | null;
           include_vie_scolaire_in_percentages?: boolean;
           overlay_period_profile_id?: string | null;
+          photo_student_url?: string | null;
+          photo_teacher_url?: string | null;
+          photo_coordo_url?: string | null;
+          photo_aesh_url?: string | null;
           created_at?: string;
         };
         Update: {
@@ -87,6 +95,10 @@ export interface Database {
           reference_timetable_pdf_url?: string | null;
           include_vie_scolaire_in_percentages?: boolean;
           overlay_period_profile_id?: string | null;
+          photo_student_url?: string | null;
+          photo_teacher_url?: string | null;
+          photo_coordo_url?: string | null;
+          photo_aesh_url?: string | null;
           created_at?: string;
         };
       };
@@ -101,6 +113,7 @@ export interface Database {
           aesh: boolean;
           label: string;
           location: string;
+          picto: string | null;
           created_at: string;
         };
         Insert: {
@@ -113,6 +126,7 @@ export interface Database {
           aesh?: boolean;
           label?: string;
           location?: string;
+          picto?: string | null;
           created_at?: string;
         };
         Update: {
@@ -125,130 +139,29 @@ export interface Database {
           aesh?: boolean;
           label?: string;
           location?: string;
+          picto?: string | null;
           created_at?: string;
         };
       };
       overlay_templates: {
-        Row: {
-          id: string;
-          user_id: string;
-          name: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          name: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          name?: string;
-          created_at?: string;
-        };
+        Row: { id: string; user_id: string; name: string; created_at: string; };
+        Insert: { id?: string; user_id: string; name: string; created_at?: string; };
+        Update: { id?: string; user_id?: string; name?: string; created_at?: string; };
       };
       overlay_template_items: {
-        Row: {
-          id: string;
-          user_id: string;
-          template_id: string;
-          name: string;
-          days: number[];
-          start_time: string;
-          end_time: string;
-          color: string;
-          is_enabled: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          template_id: string;
-          name: string;
-          days: number[];
-          start_time: string;
-          end_time: string;
-          color?: string;
-          is_enabled?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          template_id?: string;
-          name?: string;
-          days?: number[];
-          start_time?: string;
-          end_time?: string;
-          color?: string;
-          is_enabled?: boolean;
-          created_at?: string;
-        };
+        Row: { id: string; user_id: string; template_id: string; name: string; days: number[]; start_time: string; end_time: string; color: string; is_enabled: boolean; created_at: string; };
+        Insert: { id?: string; user_id: string; template_id: string; name: string; days: number[]; start_time: string; end_time: string; color?: string; is_enabled?: boolean; created_at?: string; };
+        Update: { id?: string; user_id?: string; template_id?: string; name?: string; days?: number[]; start_time?: string; end_time?: string; color?: string; is_enabled?: boolean; created_at?: string; };
       };
       overlay_period_profiles: {
-        Row: {
-          id: string;
-          user_id: string;
-          period_id: string;
-          name: string;
-          source_template_id: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          period_id: string;
-          name: string;
-          source_template_id?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          period_id?: string;
-          name?: string;
-          source_template_id?: string | null;
-          created_at?: string;
-        };
+        Row: { id: string; user_id: string; period_id: string; name: string; source_template_id: string | null; created_at: string; };
+        Insert: { id?: string; user_id: string; period_id: string; name: string; source_template_id?: string | null; created_at?: string; };
+        Update: { id?: string; user_id?: string; period_id?: string; name?: string; source_template_id?: string | null; created_at?: string; };
       };
       overlay_period_items: {
-        Row: {
-          id: string;
-          user_id: string;
-          period_profile_id: string;
-          name: string;
-          days: number[];
-          start_time: string;
-          end_time: string;
-          color: string;
-          is_enabled: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          period_profile_id: string;
-          name: string;
-          days: number[];
-          start_time: string;
-          end_time: string;
-          color?: string;
-          is_enabled?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          period_profile_id?: string;
-          name?: string;
-          days?: number[];
-          start_time?: string;
-          end_time?: string;
-          color?: string;
-          is_enabled?: boolean;
-          created_at?: string;
-        };
+        Row: { id: string; user_id: string; period_profile_id: string; name: string; days: number[]; start_time: string; end_time: string; color: string; is_enabled: boolean; created_at: string; };
+        Insert: { id?: string; user_id: string; period_profile_id: string; name: string; days: number[]; start_time: string; end_time: string; color?: string; is_enabled?: boolean; created_at?: string; };
+        Update: { id?: string; user_id?: string; period_profile_id?: string; name?: string; days?: number[]; start_time?: string; end_time?: string; color?: string; is_enabled?: boolean; created_at?: string; };
       };
     };
   };

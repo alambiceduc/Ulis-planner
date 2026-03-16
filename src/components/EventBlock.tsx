@@ -1,6 +1,7 @@
 import { Edit2, Trash2, User } from 'lucide-react';
 import type { Event } from '../lib/database.types';
 import { EVENT_TYPE_CONFIG, calculateEventDuration } from '../lib/timeUtils';
+import { getAutoPicto } from '../utils/pictoMap';
 
 interface EventBlockProps {
   event: Event;
@@ -113,8 +114,13 @@ export function EventBlock({ event, heightRem, onEdit, onDelete, exportMode = fa
           </>
         ) : (
           <>
-            <div className="font-bold text-base leading-snug whitespace-nowrap">
-              {event.start_time}-{event.end_time}
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg leading-none flex-shrink-0">
+                {event.picto || getAutoPicto(event.label)}
+              </span>
+              <div className="font-bold text-base leading-snug whitespace-nowrap">
+                {event.start_time}-{event.end_time}
+              </div>
             </div>
             {event.label && (
               <div className="font-semibold text-sm leading-snug mt-1 break-words">
