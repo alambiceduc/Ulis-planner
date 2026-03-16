@@ -64,7 +64,7 @@ Règles :
       },
       body: JSON.stringify({
         model: 'claude-opus-4-6',
-        max_tokens: 4000,
+        max_tokens: 8000, // ✅ CORRECTION 1 : augmenté de 4000 à 8000
         system: systemPrompt,
         messages: [{ role: 'user', content: messageContent }],
       }),
@@ -89,7 +89,29 @@ Règles :
       return res.status(500).json({ error: "La réponse de l'IA ne contient pas de JSON valide" });
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    let jsonStr = jsonMatch[0];
+
+    // ✅ CORRECTION 2 : répare un JSON tronqué en coupant au dernier objet complet
+    try {
+      JSON.parse(jsonStr);
+    } catch {
+      // Le JSON est tronqué : on coupe après le dernier "}" complet dans le tableau
+      const lastCompleteObject = jsonStr.lastIndexOf('}');
+      if (lastCompleteObject !== -1) {
+        // On reconstruit un tableau valide jusqu'au dernier objet complet
+        jsonStr = jsonStr.slice(0, lastCompleteObject + 1);
+        // S'assurer que le tableau events est bien fermé
+        const openBracket = jsonStr.indexOf('[');
+        if (openBracket !== -1) {
+          jsonStr = jsonStr.slice(0, openBracket) + jsonStr.slice(openBracket);
+          if (!jsonStr.trimEnd().endsWith(']}')) {
+            jsonStr = jsonStr + ']}';
+          }
+        }
+      }
+    }
+
+    const parsed = JSON.parse(jsonStr);
     return res.status(200).json(parsed);
 
   } catch (err: any) {
