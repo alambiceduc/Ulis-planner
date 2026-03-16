@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Calendar, LogOut } from 'lucide-react';
+import { Calendar, LogOut, BookOpen } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { Period, PeriodName } from '../lib/database.types';
 
@@ -12,6 +14,8 @@ interface PeriodSelectorProps {
 
 export function PeriodSelector({ onSelectPeriod }: PeriodSelectorProps) {
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
+  const navigate = useNavigate();
   const [periods, setPeriods] = useState<Period[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -105,14 +109,23 @@ export function PeriodSelector({ onSelectPeriod }: PeriodSelectorProps) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {periods.map((period) => (
-              <button
-                key={period.id}
-                onClick={() => onSelectPeriod(period)}
-                className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl p-6 transition-all transform hover:scale-105 shadow-md"
-              >
-                <div className="text-3xl font-bold mb-2">{period.name}</div>
-                <div className="text-sm opacity-90">Période {period.name.slice(1)}</div>
-              </button>
+              <div key={period.id} className="flex flex-col gap-2">
+                <button
+                  onClick={() => onSelectPeriod(period)}
+                  className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl p-6 transition-all transform hover:scale-105 shadow-md"
+                >
+                  <div className="text-3xl font-bold mb-2">{period.name}</div>
+                  <div className="text-sm opacity-90">Période {period.name.slice(1)}</div>
+                </button>
+                <button
+                  onClick={() => navigate(`/cahier-journal?periodId=${period.id}`)}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 rounded-xl transition-colors text-sm font-medium shadow-sm"
+                  title="Générer le cahier journal ULIS pour cette période"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Cahier journal
+                </button>
+              </div>
             ))}
           </div>
         </div>
