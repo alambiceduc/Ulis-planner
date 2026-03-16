@@ -26,6 +26,13 @@ interface GroupedEvent {
   students: string[];
 }
 
+interface StudentSummary {
+  name: string;
+  first_time: string;
+  last_time: string;
+  slots: GroupedEvent[];
+}
+
 
 
 export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimetablesProps) {
@@ -34,6 +41,16 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
   const [events, setEvents] = useState<StudentEvent[]>([]);
   const [viewType, setViewType] = useState<ViewType>('ulis');
   const [loading, setLoading] = useState(true);
+  const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
+
+  const toggleStudent = (key: string) => {
+    setExpandedStudents(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   useEffect(() => {
     loadData();
@@ -144,6 +161,29 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
     }
 
     return merged;
+  };
+
+  const getStudentSummaries = (dayEvents: GroupedEvent[]): StudentSummary[] => {
+    const studentMap = new Map<string, GroupedEvent[]>();
+    dayEvents.forEach(event => {
+      event.students.forEach(name => {
+        if (!studentMap.has(name)) studentMap.set(name, []);
+        studentMap.get(name)!.push(event);
+      });
+    });
+
+    const summaries: StudentSummary[] = [];
+    studentMap.forEach((slots, name) => {
+      const sorted = [...slots].sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
+      summaries.push({
+        name,
+        first_time: sorted[0].start_time,
+        last_time: sorted[sorted.length - 1].end_time,
+        slots: sorted,
+      });
+    });
+
+    return summaries.sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const getEventsByPeriod = (dayEvents: GroupedEvent[]) => {
@@ -301,63 +341,105 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
                             <>
                               {eventsByPeriod.MATIN.length > 0 && (
                                 <div className="border border-blue-200 rounded-lg bg-blue-50 p-3">
-                                  <div className="font-bold text-blue-800 text-sm mb-2">
-                                    MATIN
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    {eventsByPeriod.MATIN.map((event, idx) => (
-                                      <div key={idx} className="text-sm leading-relaxed">
-                                        <span className="font-bold text-gray-900">
-                                          {event.start_time}-{event.end_time}
-                                        </span>
-                                        <span className="text-gray-700"> : </span>
-                                        <span className="font-medium text-gray-800">
-                                          {event.students.join(', ')}
-                                        </span>
-                                      </div>
-                                    ))}
+                                  <div className="font-bold text-blue-800 text-sm mb-2">MATIN</div>
+                                  <div className="space-y-1">
+                                    {getStudentSummaries(eventsByPeriod.MATIN).map((s) => {
+                                      const key = `${day.id}-matin-${s.name}`;
+                                      const expanded = expandedStudents.has(key);
+                                      return (
+                                        <div key={key}>
+                                          <button
+                                            onClick={() => toggleStudent(key)}
+                                            className="w-full flex items-center justify-between text-sm py-0.5 hover:bg-blue-100 rounded px-1 transition-colors"
+                                          >
+                                            <span className="font-semibold text-gray-900">{s.name}</span>
+                                            <span className="text-gray-600 font-medium">
+                                              {s.first_time} → {s.last_time}
+                                              <span className="ml-1 text-blue-400">{expanded ? '▲' : '▼'}</span>
+                                            </span>
+                                          </button>
+                                          {expanded && (
+                                            <div className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1">
+                                              {s.slots.map((slot, i) => (
+                                                <span key={i} className="bg-white border border-blue-200 rounded px-1 py-0.5">
+                                                  {slot.start_time}-{slot.end_time}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )}
 
                               {eventsByPeriod.MIDI.length > 0 && (
                                 <div className="border border-yellow-200 rounded-lg bg-yellow-50 p-3">
-                                  <div className="font-bold text-yellow-800 text-sm mb-2">
-                                    MIDI
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    {eventsByPeriod.MIDI.map((event, idx) => (
-                                      <div key={idx} className="text-sm leading-relaxed">
-                                        <span className="font-bold text-gray-900">
-                                          {event.start_time}-{event.end_time}
-                                        </span>
-                                        <span className="text-gray-700"> : </span>
-                                        <span className="font-medium text-gray-800">
-                                          {event.students.join(', ')}
-                                        </span>
-                                      </div>
-                                    ))}
+                                  <div className="font-bold text-yellow-800 text-sm mb-2">MIDI</div>
+                                  <div className="space-y-1">
+                                    {getStudentSummaries(eventsByPeriod.MIDI).map((s) => {
+                                      const key = `${day.id}-midi-${s.name}`;
+                                      const expanded = expandedStudents.has(key);
+                                      return (
+                                        <div key={key}>
+                                          <button
+                                            onClick={() => toggleStudent(key)}
+                                            className="w-full flex items-center justify-between text-sm py-0.5 hover:bg-yellow-100 rounded px-1 transition-colors"
+                                          >
+                                            <span className="font-semibold text-gray-900">{s.name}</span>
+                                            <span className="text-gray-600 font-medium">
+                                              {s.first_time} → {s.last_time}
+                                              <span className="ml-1 text-yellow-400">{expanded ? '▲' : '▼'}</span>
+                                            </span>
+                                          </button>
+                                          {expanded && (
+                                            <div className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1">
+                                              {s.slots.map((slot, i) => (
+                                                <span key={i} className="bg-white border border-yellow-200 rounded px-1 py-0.5">
+                                                  {slot.start_time}-{slot.end_time}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )}
 
                               {eventsByPeriod['APRES-MIDI'].length > 0 && (
                                 <div className="border border-green-200 rounded-lg bg-green-50 p-3">
-                                  <div className="font-bold text-green-800 text-sm mb-2">
-                                    APRÈS-MIDI
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    {eventsByPeriod['APRES-MIDI'].map((event, idx) => (
-                                      <div key={idx} className="text-sm leading-relaxed">
-                                        <span className="font-bold text-gray-900">
-                                          {event.start_time}-{event.end_time}
-                                        </span>
-                                        <span className="text-gray-700"> : </span>
-                                        <span className="font-medium text-gray-800">
-                                          {event.students.join(', ')}
-                                        </span>
-                                      </div>
-                                    ))}
+                                  <div className="font-bold text-green-800 text-sm mb-2">APRÈS-MIDI</div>
+                                  <div className="space-y-1">
+                                    {getStudentSummaries(eventsByPeriod['APRES-MIDI']).map((s) => {
+                                      const key = `${day.id}-aprem-${s.name}`;
+                                      const expanded = expandedStudents.has(key);
+                                      return (
+                                        <div key={key}>
+                                          <button
+                                            onClick={() => toggleStudent(key)}
+                                            className="w-full flex items-center justify-between text-sm py-0.5 hover:bg-green-100 rounded px-1 transition-colors"
+                                          >
+                                            <span className="font-semibold text-gray-900">{s.name}</span>
+                                            <span className="text-gray-600 font-medium">
+                                              {s.first_time} → {s.last_time}
+                                              <span className="ml-1 text-green-400">{expanded ? '▲' : '▼'}</span>
+                                            </span>
+                                          </button>
+                                          {expanded && (
+                                            <div className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1">
+                                              {s.slots.map((slot, i) => (
+                                                <span key={i} className="bg-white border border-green-200 rounded px-1 py-0.5">
+                                                  {slot.start_time}-{slot.end_time}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )}
