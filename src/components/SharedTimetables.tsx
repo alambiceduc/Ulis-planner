@@ -188,7 +188,7 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
       summaries.push({
         name,
         first_time: sorted[0].start_time,
-        last_time: sorted[sorted.length - 1].end_time,
+        last_time: sorted[sorted.length - 1].end_time, // fixed
         slots: sorted,
         labels,
       });
