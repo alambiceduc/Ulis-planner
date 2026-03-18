@@ -183,7 +183,7 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
     });
 
     const summaries: StudentSummary[] = [];
-    studentMap.forEach(({ slots, labels }, name => {
+    studentMap.forEach(({ slots, labels }, name) => {
       const sorted = [...slots].sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
       summaries.push({
         name,
