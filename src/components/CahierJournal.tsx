@@ -12,7 +12,7 @@ interface StudentEvent extends Event { student: Student; }
 interface Slot {
   start_time: string;
   end_time: string;
-  label: string;
+  labels: string[];   // tous les labels fusionnés (comme SharedTimetables)
   location: string;
   students: string[];
   dayId: number;
@@ -25,6 +25,7 @@ interface Notes {
 type ViewMode = 'jour' | 'semaine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+// Clé stable basée sur le créneau fusionné final
 const slotKey = (dayId: number, start: string, end: string) => `${dayId}|${start}|${end}`;
 
 const PERIOD_LABEL: Record<string, string> = {
@@ -36,6 +37,58 @@ function getPeriod(time: string): 'MATIN' | 'MIDI' | 'APRES-MIDI' {
   if (m < 720) return 'MATIN';
   if (m < 810) return 'MIDI';
   return 'APRES-MIDI';
+}
+
+// ── Même logique de fusion que SharedTimetables ───────────────────────────────
+function buildMergedSlots(enriched: StudentEvent[]): Slot[] {
+  // 1. Grouper par (jour, start, end) exact
+  const map = new Map<string, StudentEvent[]>();
+  enriched.forEach(ev => {
+    const k = slotKey(ev.day_of_week, ev.start_time, ev.end_time);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k)!.push(ev);
+  });
+
+  // 2. Construire les créneaux groupés par créneau exact
+  const grouped = Array.from(map.entries()).map(([k, evs]) => {
+    const [dayId, start_time, end_time] = k.split('|');
+    const uniqueStudents = Array.from(new Set(evs.map(e => e.student.first_name))).sort();
+    const uniqueLabels = Array.from(new Set(evs.map(e => e.label).filter(Boolean))) as string[];
+    return {
+      start_time,
+      end_time,
+      labels: uniqueLabels,
+      location: evs[0].location || '',
+      students: uniqueStudents,
+      dayId: Number(dayId),
+    };
+  });
+
+  // 3. Trier par jour puis par heure
+  grouped.sort((a, b) => {
+    if (a.dayId !== b.dayId) return a.dayId - b.dayId;
+    return timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
+  });
+
+  // 4. Fusionner les créneaux consécutifs avec les mêmes élèves (identique à SharedTimetables)
+  const merged: Slot[] = [];
+  for (const slot of grouped) {
+    const last = merged[merged.length - 1];
+    const sameGroup =
+      last &&
+      last.dayId === slot.dayId &&
+      last.end_time === slot.start_time &&
+      last.students.join(',') === slot.students.join(',');
+
+    if (sameGroup) {
+      last.end_time = slot.end_time;
+      slot.labels.forEach(l => { if (!last.labels.includes(l)) last.labels.push(l); });
+    } else {
+      merged.push({ ...slot, labels: [...slot.labels] });
+    }
+  }
+
+  return merged;
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
@@ -58,7 +111,6 @@ export function CahierJournal() {
     loadData();
   }, [periodId]);
 
-  // Charger les notes sauvegardées depuis Supabase
   const loadNotes = async (pid: string) => {
     const { data } = await supabase
       .from('cahier_journal_notes')
@@ -77,13 +129,11 @@ export function CahierJournal() {
     try {
       setLoading(true);
 
-      // Charger la période
       const { data: periodData, error: pe } = await supabase
         .from('periods').select('*').eq('id', periodId!).single();
       if (pe) throw pe;
       setPeriod(periodData);
 
-      // Charger les élèves de la période
       const { data: studentsData, error: se } = await supabase
         .from('students').select('*').eq('period_id', periodId!);
       if (se) throw se;
@@ -91,46 +141,19 @@ export function CahierJournal() {
 
       const studentIds = studentsData.map((s: any) => s.id);
 
-      // Charger les événements ULIS uniquement
       const { data: eventsData, error: ee } = await supabase
         .from('events').select('*')
         .in('student_id', studentIds)
         .eq('type', 'ULIS');
       if (ee) throw ee;
 
-      // Enrichir avec l'objet student
       const enriched: StudentEvent[] = (eventsData || []).map((ev: any) => ({
         ...ev,
         student: studentsData.find((s: any) => s.id === ev.student_id)!
       }));
 
-      // Grouper par (jour, start, end)
-      const map = new Map<string, StudentEvent[]>();
-      enriched.forEach(ev => {
-        const k = slotKey(ev.day_of_week, ev.start_time, ev.end_time);
-        if (!map.has(k)) map.set(k, []);
-        map.get(k)!.push(ev);
-      });
-
-      const builtSlots: Slot[] = Array.from(map.entries())
-        .map(([k, evs]) => {
-          const [dayId, start_time, end_time] = k.split('|');
-          const first = evs[0];
-          return {
-            start_time,
-            end_time,
-            label: first.label || '',
-            location: first.location || '',
-            students: Array.from(new Set(evs.map(e => e.student.first_name))).sort(),
-            dayId: Number(dayId),
-          };
-        })
-        .sort((a, b) => {
-          if (a.dayId !== b.dayId) return a.dayId - b.dayId;
-          return timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
-        });
-
-      setSlots(builtSlots);
+      // Utiliser la même logique de fusion que SharedTimetables
+      setSlots(buildMergedSlots(enriched));
       await loadNotes(periodId!);
     } catch (err: any) {
       setError(err.message);
@@ -201,13 +224,13 @@ export function CahierJournal() {
       for (const [p, pSlots] of Object.entries(byPeriod)) {
         if (!pSlots.length) continue;
         html += `<h3>${PERIOD_LABEL[p]}</h3><table>
-          <tr><th>Horaire</th><th>Matière</th><th>Élèves</th><th>Objectif de séance</th><th>Matériel</th></tr>`;
+          <tr><th>Horaire</th><th>Matière(s)</th><th>Élèves</th><th>Objectif de séance</th><th>Matériel</th></tr>`;
         for (const slot of pSlots) {
           const k = slotKey(slot.dayId, slot.start_time, slot.end_time);
           const n = notes[k] || { objectif: '', materiel: '' };
           html += `<tr>
             <td class="time">${slot.start_time}–${slot.end_time}</td>
-            <td class="label">${slot.label || '<span class="empty">—</span>'}</td>
+            <td class="label">${slot.labels.length ? slot.labels.join(', ') : '<span class="empty">—</span>'}</td>
             <td class="students">${slot.students.join(', ') || '<span class="empty">—</span>'}</td>
             <td>${n.objectif || '<span class="empty">À compléter</span>'}</td>
             <td>${n.materiel || '<span class="empty">À compléter</span>'}</td>
@@ -362,8 +385,14 @@ export function CahierJournal() {
                                       <span className="font-bold text-sm whitespace-nowrap">
                                         {slot.start_time}–{slot.end_time}
                                       </span>
-                                      {slot.label && (
-                                        <span className="font-semibold text-sm">{slot.label}</span>
+                                      {slot.labels.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                          {slot.labels.map((label, i) => (
+                                            <span key={i} className="font-semibold text-sm bg-white bg-opacity-20 rounded px-1.5 py-0.5">
+                                              {label}
+                                            </span>
+                                          ))}
+                                        </div>
                                       )}
                                       {slot.students.length > 0 && (
                                         <span className="text-xs bg-white bg-opacity-20 rounded-full px-2 py-0.5">
