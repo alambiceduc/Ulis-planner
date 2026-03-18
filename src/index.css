@@ -831,3 +831,11 @@ body.printing .print-table-time-cell {
     break-inside: avoid !important;
   }
 }
+
+@media print {
+  .student-labels {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 2px !important;
+  }
+}

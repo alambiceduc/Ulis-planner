@@ -183,7 +183,7 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
     });
 
     const summaries: StudentSummary[] = [];
-    studentMap.forEach(({ slots, labels }, name) => {
+    studentMap.forEach(({ slots, labels }, name => {
       const sorted = [...slots].sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
       summaries.push({
         name,
@@ -366,22 +366,23 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
                                             <span className="font-semibold text-gray-900">{s.name}</span>
                                             <span className="text-gray-600 font-medium">
                                               {s.first_time} → {s.last_time}
-                                              <span className="ml-1 text-blue-400">{expanded ? '▲' : '▼'}</span>
+                                              <span className="ml-1 text-blue-400 no-print">{expanded ? '▲' : '▼'}</span>
                                             </span>
                                           </button>
-                                          {expanded && (
-                                            <div className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1">
-                                              {s.labels.length > 0 ? s.labels.map((label, i) => (
-                                                <span key={i} className="bg-white border border-blue-200 rounded px-1.5 py-0.5 text-gray-700">
-                                                  {label}
-                                                </span>
-                                              )) : s.slots.map((slot, i) => (
-                                                <span key={i} className="bg-white border border-blue-200 rounded px-1 py-0.5">
-                                                  {slot.start_time}-{slot.end_time}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
+                                          <div
+                                            className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1 student-labels"
+                                            style={{ display: expanded ? 'flex' : 'none' }}
+                                          >
+                                            {s.labels.length > 0 ? s.labels.map((label, i) => (
+                                              <span key={i} className="bg-white border border-blue-200 rounded px-1.5 py-0.5 text-gray-700">
+                                                {label}
+                                              </span>
+                                            )) : s.slots.map((slot, i) => (
+                                              <span key={i} className="bg-white border border-blue-200 rounded px-1 py-0.5">
+                                                {slot.start_time}-{slot.end_time}
+                                              </span>
+                                            ))}
+                                          </div>
                                         </div>
                                       );
                                     })}
@@ -405,22 +406,23 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
                                             <span className="font-semibold text-gray-900">{s.name}</span>
                                             <span className="text-gray-600 font-medium">
                                               {s.first_time} → {s.last_time}
-                                              <span className="ml-1 text-yellow-400">{expanded ? '▲' : '▼'}</span>
+                                              <span className="ml-1 text-yellow-400 no-print">{expanded ? '▲' : '▼'}</span>
                                             </span>
                                           </button>
-                                          {expanded && (
-                                            <div className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1">
-                                              {s.labels.length > 0 ? s.labels.map((label, i) => (
-                                                <span key={i} className="bg-white border border-yellow-200 rounded px-1.5 py-0.5 text-gray-700">
-                                                  {label}
-                                                </span>
-                                              )) : s.slots.map((slot, i) => (
-                                                <span key={i} className="bg-white border border-yellow-200 rounded px-1 py-0.5">
-                                                  {slot.start_time}-{slot.end_time}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
+                                          <div
+                                            className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1 student-labels"
+                                            style={{ display: expanded ? 'flex' : 'none' }}
+                                          >
+                                            {s.labels.length > 0 ? s.labels.map((label, i) => (
+                                              <span key={i} className="bg-white border border-yellow-200 rounded px-1.5 py-0.5 text-gray-700">
+                                                {label}
+                                              </span>
+                                            )) : s.slots.map((slot, i) => (
+                                              <span key={i} className="bg-white border border-yellow-200 rounded px-1 py-0.5">
+                                                {slot.start_time}-{slot.end_time}
+                                              </span>
+                                            ))}
+                                          </div>
                                         </div>
                                       );
                                     })}
@@ -444,22 +446,23 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
                                             <span className="font-semibold text-gray-900">{s.name}</span>
                                             <span className="text-gray-600 font-medium">
                                               {s.first_time} → {s.last_time}
-                                              <span className="ml-1 text-green-400">{expanded ? '▲' : '▼'}</span>
+                                              <span className="ml-1 text-green-400 no-print">{expanded ? '▲' : '▼'}</span>
                                             </span>
                                           </button>
-                                          {expanded && (
-                                            <div className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1">
-                                              {s.labels.length > 0 ? s.labels.map((label, i) => (
-                                                <span key={i} className="bg-white border border-green-200 rounded px-1.5 py-0.5 text-gray-700">
-                                                  {label}
-                                                </span>
-                                              )) : s.slots.map((slot, i) => (
-                                                <span key={i} className="bg-white border border-green-200 rounded px-1 py-0.5">
-                                                  {slot.start_time}-{slot.end_time}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
+                                          <div
+                                            className="ml-2 mt-0.5 mb-1 text-xs text-gray-500 flex flex-wrap gap-1 student-labels"
+                                            style={{ display: expanded ? 'flex' : 'none' }}
+                                          >
+                                            {s.labels.length > 0 ? s.labels.map((label, i) => (
+                                              <span key={i} className="bg-white border border-green-200 rounded px-1.5 py-0.5 text-gray-700">
+                                                {label}
+                                              </span>
+                                            )) : s.slots.map((slot, i) => (
+                                              <span key={i} className="bg-white border border-green-200 rounded px-1 py-0.5">
+                                                {slot.start_time}-{slot.end_time}
+                                              </span>
+                                            ))}
+                                          </div>
                                         </div>
                                       );
                                     })}
