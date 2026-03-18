@@ -484,3 +484,4 @@ export function SharedTimetables({ period, onBack, onNavigateHome }: SharedTimet
     </div>
   );
 }
+
