@@ -129,7 +129,7 @@ export function EventModal({ student, event, initialDay, initialStartTime, onClo
           }
         }
 
-        // Les jours décochés ne sont PAS supprimés — ils restent inchangés.
+        // Les jours décochés ne sont PAS supprimés - ils restent inchangés.
         // Seuls les jours encore cochés sont mis à jour, et les nouveaux jours sont créés.
 
         if (daysToCreate.length > 0) {

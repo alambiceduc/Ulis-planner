@@ -254,12 +254,12 @@ export function AiPrefillModal({ student, onClose, onSuccess }: AiPrefillModalPr
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-semibold text-gray-700 w-16 flex-shrink-0">{DAY_LABELS[event.day_of_week]}</span>
-                      <span className="text-sm text-gray-500 font-mono">{event.start_time} – {event.end_time}</span>
+                      <span className="text-sm text-gray-500 font-mono">{event.start_time} - {event.end_time}</span>
                       <span className={`text-xs px-2 py-0.5 rounded border font-medium ${TYPE_COLORS[event.type]}`}>{TYPE_LABELS[event.type]}</span>
                       {event.aesh && <span className="text-xs px-2 py-0.5 rounded border bg-orange-100 text-orange-700 border-orange-200 font-medium">AESH</span>}
                     </div>
                     {(event.label || event.location) && (
-                      <p className="text-xs text-gray-400 mt-0.5 ml-[4.5rem]">{[event.label, event.location].filter(Boolean).join(' — ')}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 ml-[4.5rem]">{[event.label, event.location].filter(Boolean).join(' - ')}</p>
                     )}
                   </div>
                   <button onClick={() => removeEvent(index)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all flex-shrink-0" title="Supprimer ce créneau">

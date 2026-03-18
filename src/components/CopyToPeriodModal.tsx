@@ -163,7 +163,7 @@ export function CopyToPeriodModal({ student, currentPeriod, onClose }: CopyToPer
               <ul className="text-sm text-indigo-700 space-y-1">
                 <li>✅ Tous les créneaux ({student.first_name})</li>
                 <li>✅ Les photos (élève, enseignant, coordo, AESH)</li>
-                <li className="text-indigo-400">— Si l'élève existe déjà dans la période cible, ses créneaux seront remplacés</li>
+                <li className="text-indigo-400">- Si l'élève existe déjà dans la période cible, ses créneaux seront remplacés</li>
               </ul>
             </div>
 

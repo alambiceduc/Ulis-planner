@@ -89,7 +89,7 @@ export function PrintPicto() {
             <ArrowLeft size={15}/> Retour
           </button>
           <div style={{borderLeft:'1px solid rgba(255,255,255,0.3)',paddingLeft:10,fontSize:13,fontWeight:700}}>
-            EDT pictogrammes — {student.first_name} {student.last_name}
+            EDT pictogrammes - {student.first_name} {student.last_name}
           </div>
           <div className="[&>button]:bg-white/20 [&>button]:text-white [&>button]:border-white/30 [&>button]:shadow-none [&>button]:text-sm [&>button]:px-3 [&>button]:py-1.5">
             <HomeButton onNavigateHome={() => { window.location.href = '/'; }} />
@@ -110,7 +110,7 @@ export function PrintPicto() {
               <img src={student.photo_student_url} alt={student.first_name} style={{width:48,height:48,borderRadius:'50%',objectFit:'cover',border:'2px solid #e5e7eb'}} />
             )}
             <div style={{fontSize:16,fontWeight:700,color:'#1f2937'}}>
-              Mon emploi du temps — {student.first_name} {student.last_name}
+              Mon emploi du temps - {student.first_name} {student.last_name}
             </div>
           </div>
           <div style={{display:'flex',gap:14,alignItems:'flex-end'}}>

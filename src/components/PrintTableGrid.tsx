@@ -567,7 +567,7 @@ export function PrintTableGrid({
           : tableBottom;
         const baseHeight = endRowTop - startRowTop;
 
-        // Apply visual insets — no arbitrary height clamping
+        // Apply visual insets - no arbitrary height clamping
         const left = baseLeft + INSET_LEFT;
         const width = baseWidth - INSET_LEFT - INSET_RIGHT;
         const top = startRowTop + INSET_TOP;

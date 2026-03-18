@@ -208,7 +208,7 @@ export function CahierJournal() {
         .empty { color: #9ca3af; font-style: italic; }
         .label { font-weight: 600; }
       </style></head><body>
-      <h1>📓 Cahier journal ULIS — Période ${period?.name}</h1>
+      <h1>📓 Cahier journal ULIS - Période ${period?.name}</h1>
       <p style="color:#6b7280;font-size:9pt;">Semaine type · ${slots.length} créneaux ULIS</p>
     `;
 
@@ -229,9 +229,9 @@ export function CahierJournal() {
           const k = slotKey(slot.dayId, slot.start_time, slot.end_time);
           const n = notes[k] || { objectif: '', materiel: '' };
           html += `<tr>
-            <td class="time">${slot.start_time}–${slot.end_time}</td>
-            <td class="label">${slot.labels.length ? slot.labels.join(', ') : '<span class="empty">—</span>'}</td>
-            <td class="students">${slot.students.join(', ') || '<span class="empty">—</span>'}</td>
+            <td class="time">${slot.start_time}-${slot.end_time}</td>
+            <td class="label">${slot.labels.length ? slot.labels.join(', ') : '<span class="empty">-</span>'}</td>
+            <td class="students">${slot.students.join(', ') || '<span class="empty">-</span>'}</td>
             <td>${n.objectif || '<span class="empty">À compléter</span>'}</td>
             <td>${n.materiel || '<span class="empty">À compléter</span>'}</td>
           </tr>`;
@@ -288,7 +288,7 @@ export function CahierJournal() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  Cahier journal ULIS — Période {period?.name}
+                  Cahier journal ULIS - Période {period?.name}
                 </h1>
                 <p className="text-gray-500 text-sm">
                   {slots.length} créneau{slots.length > 1 ? 'x' : ''} ULIS · Semaine type
@@ -383,7 +383,7 @@ export function CahierJournal() {
                                     {/* Ligne supérieure : infos fixes */}
                                     <div className="flex items-center gap-4 px-4 py-2 bg-blue-600 text-white flex-wrap">
                                       <span className="font-bold text-sm whitespace-nowrap">
-                                        {slot.start_time}–{slot.end_time}
+                                        {slot.start_time}-{slot.end_time}
                                       </span>
                                       {slot.labels.length > 0 && (
                                         <div className="flex flex-wrap gap-1">
